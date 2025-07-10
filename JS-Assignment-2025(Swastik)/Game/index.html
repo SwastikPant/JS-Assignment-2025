@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="scoreboard">Score: 0</div>
+  <div id="bossHealthContainer">
+    <div id="bossHealthBar"></div>
+  </div>
+  <div id="gameArea">
+    <img id="player"></div>
+    <canvas id="boss" width="300" height="300"></canvas>
+  </div>
+  <audio id="bgm" src="assets/bgm.mp3" loop></audio>
+  <audio id="bgm2" src="assets/bgm2.mp3" loop></audio>
+  <audio id="bgm3" src="assets/bgm3.mp3" loop></audio>
+  <audio id="bombSound" src="assets/bomb.mp3"></audio>
+  <audio id="gameOver" src="assets/gameover.mp3"></audio>
+  <audio id="sandevistan1" src="assets/sandevistan1.mp3"></audio>
+  <audio id="sandevistan2" src="assets/sandevistan2.mp3"></audio>
+  <audio id="coin" src="assets/coin.mp3"></audio>
+  <audio id="reverseSound" src="assets/reverse.mp3"></audio>
+  <audio id="missileSound" src="assets/missile.mp3"></audio>
+  <audio id="shield" src="assets/shield.mp3"></audio>
+  <audio id="shieldgone" src="assets/shieldgone.mp3"></audio>
+  <audio id="damageSound" src="assets/damage.mp3"></audio>
+  <audio id="victorySound" src="assets/victory.mp3"></audio>
+
+  <div id="welcomeScreen">
+    <div id="modeSelectBox" class="welcomeBox">
+      <h1>Game Modes</h1>
+      <button onclick="showInstructions('coin')">Coin Collector</button>
+      <button onclick="showInstructions('boss')">Boss Battle</button>
+    </div>
+
+    <div id="coinBox" class="welcomeBox" style="display: none;">
+      <h1>Coin Collector</h1>
+      <p>
+        Move left and right to catch falling coins.<br>
+        Avoid touching any bombs.<br>
+        Items start falling rapidly as time progresses.<br><br>
+        POWERUPS:<br><br>
+        1.SHIELDS (<img src="assets/shield.png" style="width: 30px; vertical-align: middle">) will protect you from bombs.<br>
+        With multiple shields, you can explode a bomb without dying.<br>
+        (This will also give you all the coins on the screen)<br><br>
+        2.SANDEVISTAN (<img src="assets/clock.png" style="width: 30px; vertical-align: middle">) can be used to slow down time.
+        </p>
+      <button onclick="startMode('coin')">Start Game</button>
+    </div>
+
+    <div id="bossBox" class="welcomeBox" style="display: none;">
+      <h1>Boss Battle</h1>
+      <p>
+        Survive and defeat the boss while dodging bombs.<br>
+        The boss deploys rocks which cannot be defended with shields.<br><br>
+        POWERUPS:<br>
+        1.SHIELDS (<img src="assets/shield.png" style="width: 30px; vertical-align: middle">) will protect you from bombs.<br>
+        With multiple shields, you can explode a bomb without dying.(Explosion reduces the boss's health)<br><br>
+        2.SANDEVISTAN (<img src="assets/clock.png" style="width: 30px; vertical-align: middle">) can be used to slow down time.
+        3.MISSILES(<img src="assets/missile.png" style= "width: 30px; vertical-align: middle">) damage the boss.(Press space to fire)<br>
+        4.REVERSERS(<img src="assets/reverse.png" style= "width: 30px; vertical-align: middle">) reflect bombs upwards.<br><br>
+      </p>
+      <button onclick="startMode('boss')">Start Game</button>
+    </div>
+  </div>
+  <script>
+    function showInstructions(mode) {
+      document.getElementById("modeSelectBox").style.display = "none";
+      document.getElementById("coinBox").style.display = mode === "coin" ? "block" : "none";
+      document.getElementById("bossBox").style.display = mode === "boss" ? "block" : "none";
+    }
+
+    function startMode(mode) {
+      document.getElementById("welcomeScreen").style.display = "none";
+
+      const script = document.createElement("script");
+      script.src = mode === "coin" ? "coincollector.js" : "bossfight.js";
+      script.type = "text/javascript";
+      document.body.appendChild(script);
+    }
+  </script>
+</body>
+</html>
