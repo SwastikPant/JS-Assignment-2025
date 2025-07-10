@@ -82,3 +82,43 @@ document.getElementById('tag-select').addEventListener('change', async (e)=>{
     </div>
   `)
 });
+let id1=0;
+let id2=10;
+
+async function fetchItems(){
+  const response=await fetch(`http://43.205.110.71:8000/items/batch?ids=${id1},${id2}`);
+  const items=await response.json();
+
+  const container=document.getElementById('items-container');
+
+  id1+=11;
+  id2=id1+10;
+
+  container.innerHTML=items.map(item=> `
+    <div class="item">
+    <h1>Item Name: ${item.name}</h1>
+    <p>ID: ${item.id}</p>
+    <p>Category: ${item.category}</p>
+    <p>Price: ${item.price}</p>
+    <p>SKU: ${item.sku}</p>
+    <p>Brand: ${item.brand}</p>
+    <p>Subcategory: ${item.subcategory}</p>
+    <p>Description: ${item.description}</p>
+    <p>Weight(kg): ${item.weight_kg}</p>
+    <p>Dimensions(cm): ${item.dimensions_cm}</p>
+    <p>Stock: ${item.stock}</p>
+    <p>Tags: ${item.tags}</p>
+    </div>
+  `)
+}
+let flag=false;
+
+document.querySelector(".all_items").addEventListener('click', ()=>{
+  fetchItems();
+  flag=true;
+}, {once:true});
+
+document.getElementById("load-more").addEventListener('click', ()=>{
+  if(flag)
+    fetchItems();
+});
