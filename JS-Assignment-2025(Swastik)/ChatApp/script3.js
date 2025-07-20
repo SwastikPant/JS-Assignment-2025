@@ -24,6 +24,20 @@ saveKey.addEventListener('click', ()=>{
   }
 })
 
+function markDown(text){
+  text=text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+  text=text.replace(/^## (.*$)/gm, '<h1>$1</h1>');
+  text=text.replace(/^### (.*$)/gm, '<h1>$1</h1>');
+  text=text.replace(/^#### (.*$)/gm, '<h1>$1</h1>');
+  text=text.replace(/\*\*(.*?)\*\*/gm, '<b>$1</b>');
+  text=text.replace(/\*(.*?)\*/gm, '<i>$1</i>');
+  text=text.replace(/_(.*?)_/gm, '<i>$1</i>');
+  text=text.replace(/~~(.*?)~~/gm, '<s>$1</s>');
+  text=text.replace(/`(.*?)`/gm, '<code>$1</code>');
+  text=text.replace(/\n/gm, '<br>');
+  return text;
+}
+
 function displayMessage(role, text){
   const div=document.createElement("div");
   div.classList.add("chat_bubble");
@@ -32,7 +46,7 @@ function displayMessage(role, text){
   else
     div.classList.add("ai_message");
 
-  div.innerHTML = marked.parse(text);
+  div.innerHTML = markDown(text);
   chatbox.appendChild(div);
   chatbox.scrollTop=chatbox.scrollHeight;
 }
@@ -63,9 +77,9 @@ function updateHistoryList(){
   });
 }
 
-async function sendMessage(){
+async function sendMessageWithStreaming() {
   const text=inputArea.value;
-  if (!text) return;
+  if(!text) return;
 
   displayMessage("user", text);
   currentChat.push({role: "user", content: text});
@@ -73,27 +87,65 @@ async function sendMessage(){
 
   const model=modelSelector.value;
 
-  const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
+  const response=await fetch("https://openrouter.ai/api/v1/chat/completions",{
     method: "POST",
-    headers: {
-      "Authorization": "Bearer " + apiKey,
+    headers:{
+      "Authorization": "Bearer "+apiKey,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
       model,
-      messages: currentChat
+      messages: currentChat,
+      stream: true
     })
   });
 
-  const data=await res.json();
-  const reply=data.choices?.[0]?.message?.content || "No response";
-  displayMessage("ai", reply);
-  currentChat.push({role: "ai", content: reply});
-  localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+  if(!response.ok || !response.body) {
+    displayMessage("ai", "Failed to get response.");
+    return;
+  }
+  const div=document.createElement("div");
+  div.classList.add("chat_bubble", "ai_message");
+  chatbox.appendChild(div);
+  chatbox.scrollTop=chatbox.scrollHeight;
 
+  const reader=response.body.getReader();
+  const decoder=new TextDecoder("utf-8");
+
+  let fullText="";
+
+  while(true) {
+    const{value, done} = await reader.read();
+    if(done) break;
+    const chunk=decoder.decode(value, { stream: true });
+
+    const lines=chunk.split("\n").filter(line => line.trim() !== "");
+
+    for(const line of lines){
+      if(line.startsWith("data: ")){
+        const dataStr=line.replace("data: ", "");
+        if(dataStr==="[DONE]") break;
+
+        try{
+          const data=JSON.parse(dataStr);
+          const data2=data.choices?.[0]?.delta?.content;
+          if (data2){
+            fullText+=data2;
+            div.innerHTML=markDown(fullText);
+            chatbox.scrollTop=chatbox.scrollHeight;
+          }
+        }catch (e) {
+          console.error("Error", e);
+        }
+      }
+    }
+  }
+
+  currentChat.push({ role: "ai", content: fullText });
+  localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
 }
 
-sendbutton.addEventListener("click", sendMessage);
+sendbutton.addEventListener("click", sendMessageWithStreaming);
 
 
 newChat.addEventListener('click',()=>{
